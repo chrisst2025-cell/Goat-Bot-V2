@@ -49,6 +49,7 @@
                 "moment-timezone": "^0.5.34",
                 "mongoose": "^9.0.0",
                 "mqtt": "^4.3.7",
+                "nodemailer": "^6.9.13",
                 "nepali-date": "^0.1.3",
                 "node-cron": "^3.0.2",
                 "node-disk-info": "^1.3.0",
@@ -106,4 +107,4 @@
                 "prompt-checkbox": "^2.2.0",
                 "terser": "^5.15.0"
         }
-		}
+}
