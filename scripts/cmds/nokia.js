@@ -1,42 +1,55 @@
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+
 module.exports = {
   config: {
     name: "nokia",
-    aliases: ["nokiya"],
-    version: "1.1",
-    author: "SIFAT",
-    shortDescription: "Make a Nokia meme from a user's avatar",
-    longDescription: "Generate a funny Nokia-styled meme using the avatar of a mentioned or replied user",
+    version: "1.0",
+    author: "Helal",
+    countDown: 10,
+    role: 0,
+    shortDescription: {
+      en: "Apply Nokia screen effect to profile photo"
+    },
+    description: {
+      en: "Creates a Nokia-style image using your or mentioned user's avatar"
+    },
     category: "fun",
-    guide: "{pn} @mention or reply to a message"
+    guide: {
+      en: "{p}nokia [@mention or reply]\n\nDefault: Your profile picture"
+    }
   },
 
-  async onStart({ api, event }) {
+  onStart: async function ({ api, event, usersData, message }) {
+    const { senderID, mentions, type, messageReply } = event;
+
+    let uid;
+    if (Object.keys(mentions).length > 0) {
+      uid = Object.keys(mentions)[0];
+    } else if (type === "message_reply") {
+      uid = messageReply.senderID;
+    } else {
+      uid = senderID;
+    }
+
+    const avatarURL = `https://graph.facebook.com/${uid}/picture?height=512&width=512&access_token=350685531728|62f8ce9f74b12f84c123cc23437a4a32`;
+
     try {
-      let targetID;
-      
-      if (Object.keys(event.mentions).length > 0) {
-        targetID = Object.keys(event.mentions)[0];
-      }
-     
-      else if (event.messageReply) {
-        targetID = event.messageReply.senderID;
-      }
-     
-      else {
-        targetID = event.senderID;
-      }
-      
-      const imageLink = `https://graph.facebook.com/${targetID}/picture?width=512&height=512&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;   
-      const apiURL = `https://maybexenos.vercel.app/meme/nokia?image=${encodeURIComponent(imageLink)}`;
+      const res = await axios.get(`https://api.popcat.xyz/v2/nokia?image=${encodeURIComponent(avatarURL)}`, {
+        responseType: "arraybuffer"
+      });
 
-      api.sendMessage({
-        body: "",
-        attachment: await global.utils.getStreamFromURL(apiURL)
-      }, event.threadID, event.messageID);
+      const imagePath = path.join(__dirname, "cache", `nokia_${uid}.jpg`);
+      fs.writeFileSync(imagePath, res.data);
 
+      message.reply({
+        body: `📱 | Here's your Nokia screen effect!`,
+        attachment: fs.createReadStream(imagePath)
+      }, () => fs.unlinkSync(imagePath));
     } catch (err) {
       console.error(err);
-      api.sendMessage("⚠️ Something went wrong. Try again later.", event.threadID, event.messageID);
+      message.reply("❌ | Failed to generate Nokia image.");
     }
   }
 };
